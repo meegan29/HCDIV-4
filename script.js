@@ -1,10 +1,10 @@
 let width = 1000, height = 600;
 
-// Select the map container and set its dimensions dynamically
+// Select the map container and append an SVG element
 let svg = d3.select("#map-container")
     .append("svg")
-    .attr("width", "100%")
-    .attr("height", "100%");
+    .attr("width", width)
+    .attr("height", height);
 
 // Tooltip setup
 let tooltip = d3.select(".tooltip");
@@ -20,6 +20,9 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
         let subzone = popData.find(e => e.Subzone.toUpperCase() == d.properties.Name);
         d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
     });
+
+    // Check if map data is loaded correctly
+    console.log(mapData);
 
     // Map and projection (adjust to center Singapore properly)
     let projection = d3.geoMercator()
@@ -60,9 +63,9 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
     // Create a new SVG container below the map for the legend
     let legendWidth = 300, legendHeight = 20;
 
-    let legendContainer = d3.select("body")
+    let legendContainer = d3.select("#legend-container")
         .append("svg")
-        .attr("width", "80%")  // Set the legend width to match the map width
+        .attr("width", width * 0.8)  // Match the map width
         .attr("height", legendHeight + 40) // Add space for labels
         .style("display", "block")
         .style("margin", "0 auto"); // Center the legend container below the map

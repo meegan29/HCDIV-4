@@ -3,54 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Singapore Population Choropleth</title>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
-    <style>
-        .subzone {
-            stroke: #000;
-            stroke-width: 0.5;
-        }
-        .tooltip {
-            position: absolute;
-            background-color: white;
-            padding: 5px;
-            border: 1px solid #ccc;
-            font-size: 12px;
-            pointer-events: none;
-            opacity: 0; /* Hidden by default */
-        }
-        /* Style for the legend */
-        .legend rect {
-            stroke-width: 0;
-        }
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            flex-direction: column;
-            height: 100vh;
-            margin: 0;
-        }
-
-        #map-container {
-            display: block;
-            width: 80%;  /* Map width as a percentage of the viewport width */
-            height: 70vh;  /* Set the map to take up 70% of the viewport height */
-            margin-bottom: 20px;  /* Space between map and legend */
-        }
-
-        legend-container {
-            width: 80%;
-            margin: 0 auto;
-        }
-
-    </style>
+    <title>Map Visualization</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Singapore Population Choropleth Map</h1>
-    <svg width="1000" height="600"></svg>
-    <div class="tooltip"></div> <!-- Tooltip container for population details -->
-
-    <script src="script.js"></script>
+    <div id="map-container"></div> <!-- Map container -->
+    <div id="legend-container"></div> <!-- Legend container -->
+    <div class="tooltip" style="position: absolute; opacity: 0; pointer-events: none;"></div> <!-- Tooltip -->
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

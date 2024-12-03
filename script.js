@@ -3,6 +3,9 @@ let width = 1000, height = 600;
 let svg = d3.select("svg")
     .attr("viewBox", "0 0 " + width + " " + height);
 
+// Tooltip setup
+let tooltip = d3.select(".tooltip");
+
 // Load external data and boot
 Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => {
 
@@ -15,10 +18,11 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
         d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
     });
 
-    // Map and projection
+    // Map and projection (adjust to center Singapore properly)
     let projection = d3.geoMercator()
-        .center([103.851959, 1.290270])
-        .fitExtent([[20, 20], [980, 580]], data[0]);
+        .center([103.851959, 1.290270]) // Center on Singapore
+        .scale(7000) // Adjust scale to make the map fit well in the SVG
+        .translate([width / 2, height / 2]); // Center the map in the SVG
 
     let geopath = d3.geoPath().projection(projection);
 
@@ -34,15 +38,27 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
         .enter()
         .append("path")
         .attr("d", geopath)
-        .attr("stroke", "black")
-        .attr("fill", d => colorScale(d.popdata));
+        .attr("stroke", "white")
+        .attr("fill", d => colorScale(d.popdata))
+        .attr("class", "subzone")
+        // Show tooltip on mouseover
+        .on("mouseover", function(event, d) {
+            tooltip.transition().duration(200).style("opacity", .9);
+            tooltip.html(`Subzone: ${d.properties.Name}<br>Population: ${d.popdata.toLocaleString()}`)
+                .style("left", (event.pageX + 5) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+        // Hide tooltip on mouseout
+        .on("mouseout", function() {
+            tooltip.transition().duration(500).style("opacity", 0);
+        });
 
-    // Create a legend group
+    // Create a legend group, positioned at the bottom-right of the map
     let legendWidth = 300, legendHeight = 20;
 
     let legend = svg.append("g")
         .attr("class", "legend")
-        .attr("transform", "translate(20, 20)");
+        .attr("transform", "translate(" + (width - legendWidth - 30) + "," + (height - legendHeight - 40) + ")");
 
     // Create a linear scale for the legend axis
     let legendScale = d3.scaleLinear()

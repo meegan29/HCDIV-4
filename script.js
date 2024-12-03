@@ -10,10 +10,9 @@ Promise.all([
 ]).then(([geoData, populationData]) => {
     // Prepare population data
     const populationMap = {};
-populationData.forEach(d => {
-    populationMap[d.Subzone] = +d.Population; // Replace `Subzone` and `Population` with correct column headers
-});
-
+    populationData.forEach(d => {
+        populationMap[d.Subzone] = +d.Population; // Replace `Subzone` and `Population` with correct column headers
+    });
 
     // Create a color scale
     const maxPopulation = d3.max(populationData, d => +d.Population);
@@ -40,8 +39,7 @@ populationData.forEach(d => {
             tooltip.html(`<strong>${subzone}</strong><br>Population: ${population}`)
                 .style("left", `${event.pageX + 10}px`)
                 .style("top", `${event.pageY - 20}px`);
-        });
-       
+        })
         .on("mousemove", event => {
             tooltip.style("left", `${event.pageX + 10}px`)
                 .style("top", `${event.pageY - 20}px`);

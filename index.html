@@ -19,6 +19,7 @@
             position: absolute;
             visibility: hidden;
             pointer-events: none;
+            white-space: nowrap; /* Ensures text doesn't break into multiple lines */
         }
 
         svg {
@@ -73,7 +74,7 @@
         // Calculate the population density and define color scale
         let maxPop = d3.max(mapData, d => d.popdata);
         let colorScale = d3.scaleSequential(d3.interpolateViridis)
-            .domain([0, maxPop]);
+            .domain([maxPop, 0]);  // Reversed scale: max population -> lightest, min population -> darkest
 
         // Map and projection
         let projection = d3.geoMercator()
@@ -95,13 +96,12 @@
             .on("mouseover", function(event, d) {
                 // Show tooltip on hover
                 tooltip.style("visibility", "visible")
-                    .html(`${d.properties.Name}<br>Population: ${d.popdata}`)
-                    .style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 10) + "px");
+                    .html(`${d.properties.Name}<br>Population: ${d.popdata}`);
             })
             .on("mousemove", function(event) {
+                // Update tooltip position to be beside the mouse
                 tooltip.style("left", (event.pageX + 10) + "px")
-                    .style("top", (event.pageY - 10) + "px");
+                    .style("top", (event.pageY + 10) + "px");
             })
             .on("mouseout", function() {
                 tooltip.style("visibility", "hidden");

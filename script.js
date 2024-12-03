@@ -54,17 +54,20 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
             tooltip.transition().duration(500).style("opacity", 0);
         });
 
+    // Create a group for the legend and position it below the SVG map
     let legendWidth = 300, legendHeight = 20;
 
-    // Create a group for the legend and position it at the bottom-right of the page
-    let legend = svg.append("g")
-    .attr("class", "legend")
-    .attr("transform", function() {
-        const pageWidth = window.innerWidth;  // Get the width of the window
-        const pageHeight = window.innerHeight;  // Get the height of the window
-        return "translate(" + (pageWidth - legendWidth - 30) + "," + (pageHeight - legendHeight - 30) + ")";
-    });
+    // Create a container below the SVG to hold the legend
+    let legendContainer = d3.select("body")
+        .append("svg")
+        .attr("width", legendWidth + 60)  // Add space for margins
+        .attr("height", legendHeight + 40) // Add space for labels
+        .style("display", "block")
+        .style("margin", "20px auto"); // Center the legend container below the map
 
+    let legend = legendContainer.append("g")
+        .attr("class", "legend")
+        .attr("transform", "translate(30, 10)"); // Position inside the legend container
 
     // Create a linear scale for the legend axis
     let legendScale = d3.scaleLinear()

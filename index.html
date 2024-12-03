@@ -124,7 +124,7 @@
             .attr("y1", "0%")
             .attr("y2", "0%");
 
-        // Add gradient color stops
+        // Add gradient color stops (we reverse the stops so darker colors are for higher populations)
         gradient.selectAll("stop")
             .data([0, 0.25, 0.5, 0.75, 1])
             .enter().append("stop")

@@ -9,13 +9,11 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
     let mapData = data[0].features;
     let popData = data[1];
 
-    // Merge pop data with map data
+    // Merge population data with map data
     mapData.forEach(d => {
         let subzone = popData.find(e => e.Subzone.toUpperCase() == d.properties.Name);
         d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
     });
-
-    console.log(mapData);
 
     // Map and projection
     let projection = d3.geoMercator()
@@ -24,10 +22,11 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
 
     let geopath = d3.geoPath().projection(projection);
 
-    // Define a color scale
+    // Define a color scale (Colorblind-friendly)
     let colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
         .domain([d3.min(mapData, d => d.popdata), d3.max(mapData, d => d.popdata)]);
 
+    // Draw the districts with color
     svg.append("g")
         .attr("id", "districts")
         .selectAll("path")
@@ -38,34 +37,45 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
         .attr("stroke", "black")
         .attr("fill", d => colorScale(d.popdata));
 
-    // Create a legend
+    // Create a legend group
+    let legendWidth = 300, legendHeight = 20;
+
     let legend = svg.append("g")
         .attr("class", "legend")
         .attr("transform", "translate(20, 20)");
 
-    let legendWidth = 300, legendHeight = 20;
-
+    // Create a linear scale for the legend axis
     let legendScale = d3.scaleLinear()
         .domain([d3.min(mapData, d => d.popdata), d3.max(mapData, d => d.popdata)])
         .range([0, legendWidth]);
 
-    legend.append("g")
-        .attr("class", "legendColor")
-        .selectAll("rect")
-        .data(d3.range(legendWidth))
-        .enter()
-        .append("rect")
-        .attr("x", (d, i) => legendScale(i))
-        .attr("y", 0)
-        .attr("width", 1)
-        .attr("height", legendHeight)
-        .attr("fill", d => colorScale(d3.invertExtent(legendScale.domain())[0] + d));
+    // Add the gradient to the legend
+    legend.append("defs")
+        .append("linearGradient")
+        .attr("id", "gradient")
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%")
+        .selectAll("stop")
+        .data(d3.range(0, 1, 1 / 10).map(t => {
+            return { offset: t * 100 + "%", color: colorScale(legendScale.invert(t * legendWidth)) };
+        }))
+        .enter().append("stop")
+        .attr("offset", d => d.offset)
+        .attr("stop-color", d => d.color);
 
-    // Add axis for legend
+    // Draw the legend rectangle (color gradient)
+    legend.append("rect")
+        .attr("width", legendWidth)
+        .attr("height", legendHeight)
+        .style("fill", "url(#gradient)");
+
+    // Add an axis to the legend
     legend.append("g")
-        .attr("class", "axis")
         .attr("transform", "translate(0," + legendHeight + ")")
         .call(d3.axisBottom(legendScale)
             .tickFormat(d3.format(".0s"))
             .ticks(5));
-})
+
+});

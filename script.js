@@ -10,9 +10,10 @@ Promise.all([
 ]).then(([geoData, populationData]) => {
     // Prepare population data
     const populationMap = {};
-    populationData.forEach(d => {
-        populationMap[d.Subzone] = +d.Population; // Assuming columns are Subzone and Population
-    });
+populationData.forEach(d => {
+    populationMap[d.Subzone] = +d.Population; // Replace `Subzone` and `Population` with correct column headers
+});
+
 
     // Create a color scale
     const maxPopulation = d3.max(populationData, d => +d.Population);
@@ -33,13 +34,14 @@ Promise.all([
             return population ? colorScale(population) : "#ccc";
         })
         .on("mouseover", (event, d) => {
-            const subzone = d.properties.Subzone;
+            const subzone = d.properties.Subzone; // Ensure this matches GeoJSON property
             const population = populationMap[subzone] || "Data not available";
             tooltip.transition().style("opacity", 1);
             tooltip.html(`<strong>${subzone}</strong><br>Population: ${population}`)
                 .style("left", `${event.pageX + 10}px`)
                 .style("top", `${event.pageY - 20}px`);
-        })
+        });
+       
         .on("mousemove", event => {
             tooltip.style("left", `${event.pageX + 10}px`)
                 .style("top", `${event.pageY - 20}px`);

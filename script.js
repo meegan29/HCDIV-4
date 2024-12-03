@@ -1,7 +1,9 @@
 let width = 1000, height = 600;
 
 let svg = d3.select("svg")
-    .attr("viewBox", "0 0 " + width + " " + height);
+    .attr("viewBox", "0 0 " + width + " " + height)
+    .style("display", "block")  // Ensure svg takes up available space
+    .style("margin", "0 auto"); // Center the svg horizontally
 
 // Tooltip setup
 let tooltip = d3.select(".tooltip");
@@ -54,10 +56,9 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
             tooltip.transition().duration(500).style("opacity", 0);
         });
 
-    // Create a group for the legend and position it below the SVG map
+    // Create a new SVG container below the map for the legend
     let legendWidth = 300, legendHeight = 20;
 
-    // Create a container below the SVG to hold the legend
     let legendContainer = d3.select("body")
         .append("svg")
         .attr("width", legendWidth + 60)  // Add space for margins

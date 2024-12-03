@@ -17,13 +17,18 @@
             border: 1px solid #ccc;
             font-size: 12px;
             pointer-events: none;
+            opacity: 0; /* Hidden by default */
+        }
+        /* Style for the legend */
+        .legend rect {
+            stroke-width: 0;
         }
     </style>
 </head>
 <body>
     <h1>Singapore Population Choropleth Map</h1>
-    <svg width="800" height="600"></svg>
-    <div class="tooltip" style="opacity: 0;"></div>
+    <svg width="1000" height="600"></svg>
+    <div class="tooltip"></div> <!-- Tooltip container for population details -->
 
     <script src="script.js"></script>
 </body>

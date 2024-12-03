@@ -26,15 +26,22 @@
         body {
             display: flex;
             justify-content: center;
-            align-items: flex-start;  /* Align to top to allow space for legend */
+            align-items: flex-start;
             flex-direction: column;
             height: 100vh;
             margin: 0;
         }
 
-        svg {
+        #map-container {
             display: block;
+            width: 80%;  /* Map width as a percentage of the viewport width */
+            height: 70vh;  /* Set the map to take up 70% of the viewport height */
             margin-bottom: 20px;  /* Space between map and legend */
+        }
+
+        legend-container {
+            width: 80%;
+            margin: 0 auto;
         }
 
     </style>

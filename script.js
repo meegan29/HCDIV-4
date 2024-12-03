@@ -1,9 +1,10 @@
 let width = 1000, height = 600;
 
-let svg = d3.select("svg")
-    .attr("viewBox", "0 0 " + width + " " + height)
-    .style("display", "block")  // Ensure svg takes up available space
-    .style("margin", "0 auto"); // Center the svg horizontally
+// Select the map container and set its dimensions dynamically
+let svg = d3.select("#map-container")
+    .append("svg")
+    .attr("width", "100%")
+    .attr("height", "100%");
 
 // Tooltip setup
 let tooltip = d3.select(".tooltip");
@@ -61,10 +62,10 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
 
     let legendContainer = d3.select("body")
         .append("svg")
-        .attr("width", legendWidth + 60)  // Add space for margins
+        .attr("width", "80%")  // Set the legend width to match the map width
         .attr("height", legendHeight + 40) // Add space for labels
         .style("display", "block")
-        .style("margin", "20px auto"); // Center the legend container below the map
+        .style("margin", "0 auto"); // Center the legend container below the map
 
     let legend = legendContainer.append("g")
         .attr("class", "legend")

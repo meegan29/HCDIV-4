@@ -1,50 +1,36 @@
-const width = 800;
-const height = 600;
-const svg = d3.select("svg");
-const tooltip = d3.select(".tooltip");
+let width = 1000, height = 600;
 
-// Load datasets
-Promise.all([
-    d3.json("sgmap.json"),
-    d3.csv("population2023.csv")
-]).then(([geoData, populationData]) => {
-    // Prepare population data
-    const populationMap = {};
-    populationData.forEach(d => {
-        populationMap[d.Subzone] = +d.Population; // Replace `Subzone` and `Population` with correct column headers
-    });
+let svg = d3.select("svg")
+    .attr("viewBox", "0 0 " + width + " " + height)
 
-    // Create a color scale
-    const maxPopulation = d3.max(populationData, d => +d.Population);
-    const colorScale = d3.scaleSequential(d3.interpolateBlues)
-        .domain([0, maxPopulation]);
+// Load external data and boot
+Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => {
 
-    // Draw the map
-    const projection = d3.geoMercator().fitSize([width, height], geoData);
-    const path = d3.geoPath().projection(projection);
+let mapData = data[0].features;
+let popData = data[1];
 
-    svg.selectAll(".subzone")
-        .data(geoData.features)
-        .join("path")
-        .attr("class", "subzone")
-        .attr("d", path)
-        .attr("fill", d => {
-            const population = populationMap[d.properties.Subzone];
-            return population ? colorScale(population) : "#ccc";
-        })
-        .on("mouseover", (event, d) => {
-            const subzone = d.properties.Subzone; // Ensure this matches GeoJSON property
-            const population = populationMap[subzone] || "Data not available";
-            tooltip.transition().style("opacity", 1);
-            tooltip.html(`<strong>${subzone}</strong><br>Population: ${population}`)
-                .style("left", `${event.pageX + 10}px`)
-                .style("top", `${event.pageY - 20}px`);
-        })
-        .on("mousemove", event => {
-            tooltip.style("left", `${event.pageX + 10}px`)
-                .style("top", `${event.pageY - 20}px`);
-        })
-        .on("mouseout", () => {
-            tooltip.transition().style("opacity", 0);
-        });
-});
+// Merge pop data with map data
+mapData.forEach(d => {
+  let subzone = popData.find(e => e.Subzone.toUpperCase() == d.properties.Name);
+  d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
+})
+
+console.log(mapData);
+
+// Map and projection
+let projection = d3.geoMercator()
+    .center([103.851959, 1.290270])
+    .fitExtent([[20, 20], [980, 580]], data[0]);
+
+let geopath = d3.geoPath().projection(projection);
+
+svg.append("g")
+    .attr("id", "districts")
+    .selectAll("path")
+    .data(mapData)
+    .enter()
+    .append("path")
+    .attr("d", geopath)
+    .attr("stroke", "black")
+    .attr("fill", "grey");
+})

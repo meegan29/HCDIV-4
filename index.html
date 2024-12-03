@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Singapore Population Choropleth</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        .subzone {
+            stroke: #000;
+            stroke-width: 0.5;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            padding: 5px;
+            border: 1px solid #ccc;
+            font-size: 12px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Singapore Population Choropleth Map</h1>
+    <svg width="800" height="600"></svg>
+    <div class="tooltip" style="opacity: 0;"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

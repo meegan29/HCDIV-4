@@ -38,7 +38,8 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
         .enter()
         .append("path")
         .attr("d", geopath)
-        .attr("stroke", "white")
+        .attr("stroke", "white") // Set stroke color to white
+        .attr("stroke-width", 0.5)
         .attr("fill", d => colorScale(d.popdata))
         .attr("class", "subzone")
         // Show tooltip on mouseover
@@ -58,7 +59,7 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
 
     let legend = svg.append("g")
         .attr("class", "legend")
-        .attr("transform", "translate(" + (width - legendWidth - 30) + "," + (height - legendHeight - 40) + ")");
+        .attr("transform", "translate(" + (width - legendWidth - 30) + "," + (height - legendHeight - 30) + ")");
 
     // Create a linear scale for the legend axis
     let legendScale = d3.scaleLinear()

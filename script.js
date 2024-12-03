@@ -1,92 +1,98 @@
-// Set up dimensions and projection
-const width = window.innerWidth;
-const height = window.innerHeight;
+let width = 1000, height = 600;
 
-const svg = d3.select('body').append('svg')
-    .attr('width', width)
-    .attr('height', height);
+let svg = d3.select("svg")
+    .attr("viewBox", "0 0 " + width + " " + height);
 
-const projection = d3.geoMercator()
-    .center([103.851959, 1.290270]) // Center coordinates of Singapore
-    .scale(40000)                   // Adjust the scale as needed
-    .translate([width / 2, height / 2]);
+// Create a color scale for population with a color-blind friendly palette
+let colorScale = d3.scaleSequential()
+    .interpolator(d3.interpolateViridis)  // Color-blind friendly palette
+    .domain([0, 126460]);  // Population range: 0 to 126460
 
-const path = d3.geoPath().projection(projection);
+// Load external data and boot
+Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => {
+    let mapData = data[0].features;
+    let popData = data[1];
 
-// Load data
-Promise.all([
-    d3.json('sgmap.json'),
-    d3.csv('population2023.csv')
-]).then(([geoData, populationData]) => {
-    const populationMap = new Map(populationData.map(d => [d.Subzone, +d.Population]));
+    // Merge population data with map data
+    mapData.forEach(d => {
+        let subzone = popData.find(e => e.Subzone.toUpperCase() == d.properties.Name);
+        d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
+    });
 
-    // Define color scale based on population density
-    const colorScale = d3.scaleSequential(d3.interpolateYlOrRd) // Yellow to Red
-        .domain([0, d3.max(populationData, d => +d.Population)]);
+    // Map projection and path generator
+    let projection = d3.geoMercator()
+        .center([103.851959, 1.290270])
+        .fitExtent([[20, 20], [980, 580]], data[0]);
 
-    // Draw map
-    svg.selectAll('path')
-        .data(geoData.features)
-        .enter().append('path')
-        .attr('d', path)
-        .attr('fill', d => {
-            const population = populationMap.get(d.properties.SubzoneName) || 0;
-            return colorScale(population);
+    let geopath = d3.geoPath().projection(projection);
+
+    // Add districts to the map
+    svg.append("g")
+        .attr("id", "districts")
+        .selectAll("path")
+        .data(mapData)
+        .enter()
+        .append("path")
+        .attr("d", geopath)
+        .attr("stroke", "black")
+        .attr("fill", d => colorScale(d.popdata)) // Color by population
+        .on("mouseover", function(event, d) {
+            d3.select(this).attr("stroke", "white").attr("stroke-width", 2);
+            d3.select("#tooltip")
+                .style("display", "block")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px")
+                .html(`<strong>${d.properties.Name}</strong><br>Population: ${d.popdata}`);
         })
-        .attr('stroke', '#333')
-        .on('mouseover', function(event, d) {
-            d3.select(this).attr('stroke', '#000').attr('stroke-width', 2);
-            showTooltip(event, d);
-        })
-        .on('mouseout', function() {
-            d3.select(this).attr('stroke', '#333').attr('stroke-width', 1);
-            hideTooltip();
+        .on("mouseout", function() {
+            d3.select(this).attr("stroke", "black").attr("stroke-width", 1);
+            d3.select("#tooltip").style("display", "none");
         });
 
-    // Tooltip functions
-    const tooltip = d3.select('body').append('div')
-        .attr('class', 'tooltip')
-        .style('position', 'absolute')
-        .style('background', '#fff')
-        .style('padding', '8px')
-        .style('border', '1px solid #ccc')
-        .style('border-radius', '4px')
-        .style('pointer-events', 'none')
-        .style('display', 'none');
+     // Create a legend group
+     let legendWidth = 300, legendHeight = 20;
 
-    function showTooltip(event, d) {
-        const population = populationMap.get(d.properties.SubzoneName) || 0;
-        tooltip.style('display', 'block')
-            .html(`<strong>${d.properties.SubzoneName}</strong><br>Population: ${population}`)
-            .style('left', (event.pageX + 10) + 'px')
-            .style('top', (event.pageY + 10) + 'px');
-    }
-
-    function hideTooltip() {
-        tooltip.style('display', 'none');
-    }
-
-    // Legend setup
-    const legendWidth = 200, legendHeight = 20;
-    const legendScale = d3.scaleLinear()
-        .domain(colorScale.domain())
-        .range([0, legendWidth]);
-
-    const legendAxis = d3.axisBottom(legendScale).ticks(5);
-
-    const legend = svg.append('g')
-        .attr('class', 'legend')
-        .attr('transform', `translate(${width - 220}, ${height - 40})`);
-
-    legend.selectAll('rect')
-        .data(d3.range(0, 1.1, 0.1))
-        .enter().append('rect')
-        .attr('x', (d, i) => i * (legendWidth / 10))
-        .attr('width', legendWidth / 10)
-        .attr('height', legendHeight)
-        .attr('fill', d => colorScale(d * colorScale.domain()[1]));
-
-    legend.append('g')
-        .attr('transform', `translate(0, ${legendHeight})`)
-        .call(legendAxis);
-});
+     let legend = svg.append("g")
+         .attr("class", "legend")
+         .attr("transform", "translate(20, 20)");
+ 
+     // Create a linear scale for the legend axis
+     let legendScale = d3.scaleLinear()
+         .domain([d3.min(mapData, d => d.popdata), d3.max(mapData, d => d.popdata)])
+         .range([0, legendWidth]);
+ 
+     // Create gradient for the legend
+     let gradient = legend.append("defs")
+         .append("linearGradient")
+         .attr("id", "gradient")
+         .attr("x1", "0%")
+         .attr("y1", "0%")
+         .attr("x2", "100%")
+         .attr("y2", "0%");
+ 
+     // Create gradient stops based on color scale
+     gradient.selectAll("stop")
+         .data(d3.range(0, 1, 1 / 10).map(t => {
+             return {
+                 offset: `${t * 100}%`,
+                 color: colorScale(legendScale.invert(t * legendWidth))
+             };
+         }))
+         .enter().append("stop")
+         .attr("offset", d => d.offset)
+         .attr("stop-color", d => d.color);
+ 
+     // Add the gradient rectangle to the legend
+     legend.append("rect")
+         .attr("width", legendWidth)
+         .attr("height", legendHeight)
+         .style("fill", "url(#gradient)");
+ 
+     // Add the axis to the legend
+     legend.append("g")
+         .attr("transform", "translate(0," + legendHeight + ")")
+         .call(d3.axisBottom(legendScale)
+             .tickFormat(d3.format(".0s"))
+             .ticks(5));  // 5 ticks on the axis
+ 
+ });

@@ -1,17 +1,15 @@
 let width = 1000, height = 600;
 
-// Select the map container and append an SVG element
-let svg = d3.select("#map-container")
-    .append("svg")
-    .attr("width", width)
-    .attr("height", height);
+let svg = d3.select("svg")
+    .attr("viewBox", "0 0 " + width + " " + height);
 
-// Tooltip setup
-let tooltip = d3.select(".tooltip");
+// Create a color scale for population with a color-blind friendly palette
+let colorScale = d3.scaleSequential()
+    .interpolator(d3.interpolateViridis)  // Color-blind friendly palette
+    .domain([0, 1000000]);  // Adjust based on population size range
 
 // Load external data and boot
 Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => {
-
     let mapData = data[0].features;
     let popData = data[1];
 
@@ -21,22 +19,14 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
         d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
     });
 
-    // Check if map data is loaded correctly
-    console.log(mapData);
-
-    // Map and projection (adjust to center Singapore properly)
+    // Map projection and path generator
     let projection = d3.geoMercator()
-        .center([103.851959, 1.290270]) // Center on Singapore
-        .scale(7000) // Adjust scale to make the map fit well in the SVG
-        .translate([width / 2, height / 2]); // Center the map in the SVG
+        .center([103.851959, 1.290270])
+        .fitExtent([[20, 20], [980, 580]], data[0]);
 
     let geopath = d3.geoPath().projection(projection);
 
-    // Define the color scale for population data
-    let colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
-        .domain([d3.min(mapData, d => d.popdata), d3.max(mapData, d => d.popdata)]);
-
-    // Draw the districts with color fill
+    // Add districts to the map
     svg.append("g")
         .attr("id", "districts")
         .selectAll("path")
@@ -44,73 +34,45 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
         .enter()
         .append("path")
         .attr("d", geopath)
-        .attr("stroke", "white") // Set stroke color to white
-        .attr("stroke-width", 0.5)
-        .attr("fill", d => colorScale(d.popdata))
-        .attr("class", "subzone")
-        // Show tooltip on mouseover
+        .attr("stroke", "white")
+        .attr("fill", d => colorScale(d.popdata)) // Color by population
         .on("mouseover", function(event, d) {
-            tooltip.transition().duration(200).style("opacity", .9);
-            tooltip.html(`Subzone: ${d.properties.Name}<br>Population: ${d.popdata.toLocaleString()}`)
-                .style("left", (event.pageX + 5) + "px")
-                .style("top", (event.pageY - 28) + "px");
+            d3.select(this).attr("stroke", "white").attr("stroke-width", 2);
+            d3.select("#tooltip")
+                .style("display", "block")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px")
+                .html(`<strong>${d.properties.Name}</strong><br>Population: ${d.popdata}`);
         })
-        // Hide tooltip on mouseout
         .on("mouseout", function() {
-            tooltip.transition().duration(500).style("opacity", 0);
+            d3.select(this).attr("stroke", "black").attr("stroke-width", 1);
+            d3.select("#tooltip").style("display", "none");
         });
 
-    // Create a new SVG container below the map for the legend
-    let legendWidth = 300, legendHeight = 20;
-
-    let legendContainer = d3.select("#legend-container")
-        .append("svg")
-        .attr("width", width * 0.8)  // Match the map width
-        .attr("height", legendHeight + 40) // Add space for labels
-        .style("display", "block")
-        .style("margin", "0 auto"); // Center the legend container below the map
-
-    let legend = legendContainer.append("g")
+    // Add a color legend
+    let legendWidth = 200, legendHeight = 10;
+    let legend = svg.append("g")
         .attr("class", "legend")
-        .attr("transform", "translate(30, 10)"); // Position inside the legend container
+        .attr("transform", "translate(800, 30)");
 
-    // Create a linear scale for the legend axis
     let legendScale = d3.scaleLinear()
-        .domain([d3.min(mapData, d => d.popdata), d3.max(mapData, d => d.popdata)])
+        .domain([0, 1000000])  // Based on the population range
         .range([0, legendWidth]);
 
-    // Create gradient for the legend
-    let gradient = legend.append("defs")
-        .append("linearGradient")
-        .attr("id", "gradient")
-        .attr("x1", "0%")
-        .attr("y1", "0%")
-        .attr("x2", "100%")
-        .attr("y2", "0%");
-
-    // Create gradient stops based on color scale
-    gradient.selectAll("stop")
-        .data(d3.range(0, 1, 1 / 10).map(t => {
-            return {
-                offset: `${t * 100}%`,
-                color: colorScale(legendScale.invert(t * legendWidth))
-            };
-        }))
-        .enter().append("stop")
-        .attr("offset", d => d.offset)
-        .attr("stop-color", d => d.color);
-
-    // Add the gradient rectangle to the legend
-    legend.append("rect")
-        .attr("width", legendWidth)
-        .attr("height", legendHeight)
-        .style("fill", "url(#gradient)");
-
-    // Add the axis to the legend
     legend.append("g")
-        .attr("transform", "translate(0," + legendHeight + ")")
-        .call(d3.axisBottom(legendScale)
-            .tickFormat(d3.format(".0s"))
-            .ticks(5));  // 5 ticks on the axis
+        .attr("class", "legend-key")
+        .selectAll("rect")
+        .data(d3.range(0, 1000000, 100000))  // Adjust for more/less categories
+        .enter().append("rect")
+        .attr("x", d => legendScale(d))
+        .attr("width", legendWidth / 10)
+        .attr("height", legendHeight)
+        .style("fill", d => colorScale(d));
 
+    legend.append("text")
+        .attr("x", 0)
+        .attr("y", legendHeight + 20)
+        .text("Population");
+
+    // Optional: Add additional labels or breaks for better granularity
 });

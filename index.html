@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map Visualization</title>
+    <title>Choropleth Map - Population by Subzone</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="map-container"></div> <!-- Map container -->
-    <div id="legend-container"></div> <!-- Legend container -->
-    <div class="tooltip" style="position: absolute; opacity: 0; pointer-events: none;"></div> <!-- Tooltip -->
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <svg width="1000" height="600"></svg>
+    <div id="tooltip" class="tooltip"></div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

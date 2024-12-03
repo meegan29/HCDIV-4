@@ -54,12 +54,17 @@ Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => 
             tooltip.transition().duration(500).style("opacity", 0);
         });
 
-    // Create a legend group, positioned at the bottom-right of the map
     let legendWidth = 300, legendHeight = 20;
 
+    // Create a group for the legend and position it at the bottom-right of the page
     let legend = svg.append("g")
-        .attr("class", "legend")
-        .attr("transform", "translate(" + (width - legendWidth - 30) + "," + (height - legendHeight - 30) + ")");
+    .attr("class", "legend")
+    .attr("transform", function() {
+        const pageWidth = window.innerWidth;  // Get the width of the window
+        const pageHeight = window.innerHeight;  // Get the height of the window
+        return "translate(" + (pageWidth - legendWidth - 30) + "," + (pageHeight - legendHeight - 30) + ")";
+    });
+
 
     // Create a linear scale for the legend axis
     let legendScale = d3.scaleLinear()

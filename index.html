@@ -119,7 +119,7 @@
         let legendWidth = 300, legendHeight = 20;
         let legend = svg.append("g")
             .attr("class", "legend")
-            .attr("transform", `translate(${width - legendWidth - 20}, ${height - 40})`);
+            .attr("transform", `translate(${width - legendWidth - 20}, ${height - legendHeight - 30})`); // Adjust position
 
         // Create a linear gradient for the legend
         let gradient = legend.append("defs").append("linearGradient")

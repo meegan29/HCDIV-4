@@ -77,8 +77,10 @@
 
         // Calculate the population density and define color scale
         let maxPop = d3.max(mapData, d => d.popdata);
-        let colorScale = d3.scaleSequential(d3.interpolateViridis)
-            .domain([maxPop, 0]);  // Reversed scale: max population -> lightest, min population -> darkest
+        let stepSize = Math.ceil(maxPop / 5);  // Divide into 5 intervals
+        let colorScale = d3.scaleThreshold()
+            .domain([stepSize, stepSize * 2, stepSize * 3, stepSize * 4, maxPop])  // Define the thresholds for the color breaks
+            .range(d3.schemeViridis[5]);  // Use 5 color scale from Viridis
 
         // Map and projection
         let projection = d3.geoMercator()
@@ -119,43 +121,44 @@
         let legendWidth = 300, legendHeight = 20;
         let legend = svg.append("g")
             .attr("class", "legend")
-            .attr("transform", `translate(${width - legendWidth - 20}, ${height - legendHeight - 30})`); // Adjust position
+            .attr("transform", `translate(${width - legendWidth - 20}, ${height - legendHeight - 30})`);
 
-        // Create a linear gradient for the legend
-        let gradient = legend.append("defs").append("linearGradient")
-            .attr("id", "legend-gradient")
-            .attr("x1", "0%")
-            .attr("y1", "0%")
-            .attr("x2", "100%")
-            .attr("y2", "0%");
-
-        gradient.append("stop")
-            .attr("offset", "0%")
-            .attr("stop-color", colorScale(maxPop));
-        gradient.append("stop")
-            .attr("offset", "100%")
-            .attr("stop-color", colorScale(0));
-
-        // Draw the gradient rectangle for the legend
-        legend.append("rect")
-            .attr("width", legendWidth)
+        // Create the color scale rectangle for the legend
+        legend.selectAll("rect")
+            .data(colorScale.range())
+            .enter()
+            .append("rect")
+            .attr("width", legendWidth / colorScale.range().length)
             .attr("height", legendHeight)
-            .style("fill", "url(#legend-gradient)");
+            .attr("x", (d, i) => i * (legendWidth / colorScale.range().length))
+            .attr("fill", d => d);
 
-        // Add text labels for the legend
-        legend.append("text")
-            .attr("x", 0)
-            .attr("y", legendHeight + 10)
+        // Add ticks and labels for the legend
+        legend.selectAll("line")
+            .data(colorScale.domain())
+            .enter()
+            .append("line")
+            .attr("x1", (d, i) => (i * legendWidth) / colorScale.domain().length + (legendWidth / colorScale.domain().length) / 2)
+            .attr("y1", legendHeight)
+            .attr("x2", (d, i) => (i * legendWidth) / colorScale.domain().length + (legendWidth / colorScale.domain().length) / 2)
+            .attr("y2", legendHeight + 10)
+            .attr("stroke", "#000");
+
+        // Add text labels for each step (population ranges)
+        legend.selectAll("text")
+            .data(colorScale.domain())
+            .enter()
+            .append("text")
+            .attr("x", (d, i) => (i * legendWidth) / colorScale.domain().length + 10)
+            .attr("y", legendHeight + 20)
             .attr("dy", "0.35em")
             .style("text-anchor", "start")
-            .text("0");
+            .text((d, i) => {
+                let rangeStart = i * stepSize;
+                let rangeEnd = (i + 1) * stepSize;
+                return `${rangeStart} - ${rangeEnd}`;
+            });
 
-        legend.append("text")
-            .attr("x", legendWidth)
-            .attr("y", legendHeight + 10)
-            .attr("dy", "0.35em")
-            .style("text-anchor", "end")
-            .text(`${Math.floor(maxPop)}`);
     });
 </script>
 

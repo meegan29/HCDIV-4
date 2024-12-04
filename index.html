@@ -49,7 +49,7 @@
 
         // Define color scale
         let colorScale = d3.scaleSequential(d3.interpolateYlOrRd) 
-            .domain([0, 10000]); // Adjust the domain based on max population
+            .domain([0, 120000]); // Adjust the domain based on max population
 
         // Load external data
         Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => {

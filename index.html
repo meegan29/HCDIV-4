@@ -49,10 +49,13 @@
 
         // Define color scale
         let colorScale = d3.scaleSequential(d3.interpolateYlOrRd) 
-            .domain([0, 10000]); // Adjust the domain based on max population
+            .domain([0, 120000]); // Adjust the domain based on max population
 
         // Load external data
-        Promise.all([d3.json("sgmap.json"), d3.csv("population2023.csv")]).then(data => {
+        Promise.all([
+            d3.json("https://raw.githubusercontent.com/meegan29/HCDIV-4/refs/heads/main/sgmap.json"),
+            d3.csv("https://raw.githubusercontent.com/meegan29/HCDIV-4/refs/heads/main/population2023.csv")
+        ]).then(data => {
             let mapData = data[0].features;
             let popData = data[1];
 
@@ -99,22 +102,22 @@
 
             // Add legend
             let legend = svg.append("g")
-                .attr("transform", "translate(20, 450)");
+                .attr("transform", "translate(570, 540)");
 
             let legendScale = d3.scaleLinear()
-                .domain([0, 10000])
-                .range([0, 200]);
+                .domain([0, 120000])
+                .range([0, 400]);
 
             let legendAxis = d3.axisBottom(legendScale)
                 .ticks(5);
 
             legend.selectAll("rect")
-                .data(d3.range(0, 10000, 2000))
+                .data(d3.range(0, 120000, 20000))
                 .enter()
                 .append("rect")
                 .attr("x", d => legendScale(d))
                 .attr("y", -10)
-                .attr("width", 40)
+                .attr("width", 67)
                 .attr("height", 10)
                 .attr("fill", d => colorScale(d));
 
